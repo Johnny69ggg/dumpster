@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html>
     <head>
         <title>left4dead.js</title>
@@ -83,9 +83,10 @@
 				} (Array.prototype.slice.call(arguments)));
 			};
 
-
 			/////////////////////////////////////////////////////////////////
-
+            //converted from left4kdead in java
+            //http://www.mojang.com/notch/j4k/l4kd/
+            
 			var mnt=0;
             keyW=87;
             keyA=65;
@@ -96,9 +97,9 @@
             canvas=0;
             imgData=0;
             mouse=0;
-            k = new Array(255);
+            k = [];
 
-            sprites = new Array(18 * 4 * 16 * 12 * 12);
+            sprites = [];
 
 			//int
             score = 0;
@@ -111,35 +112,32 @@
             yWin1 = 0;
             lightmap = [];
             brightness = [];
-			map = [];
-			monsterData = [];
-			initArr(lightmap,240*240);
-			initArr(brightness,512);
-			initArr(map,1024*1024);
-			initArr(monsterData,320*16);
-			
+            map = [];
+	    monsterData = [];
+
+
 			/*
 [0] x
 [1] y
 [2] aggro? (0-15)
 [3] ++ (how many movements)
 [8] rand(25) ==12:
-[9] monsterhealth? (127 oder 0) 
+[9] monsterhealth? (127 oder 0)
 [10] ??? 0-x
 [11] 0=empty 1=player/monster
 [15] color?
-			 */ 
+			 */
 
             ///////////////////////////////////////////
 
             function mkint(x) {
-                return Math.round(x) || 0;
+                return parseInt(x);
             }
             function rand(max) {
-                return Math.round(Math.random()*max) || 0;
+                return parseInt(Math.random()*max);
             }
             function setPixel(pos,pix) {
-                pos=mkint(pos)*4;
+                pos=mkint(pos) << 2;
 				pix=mkint(pix);
                 imgData.data[pos+2] = pix & 0xff;
                 pix = pix >> 8;
@@ -147,13 +145,10 @@
                 pix = pix >> 8;
                 imgData.data[pos] = pix & 0xff;
             }
-            function getPixel(pos) {
-                pos=pos*4;
-                return imgData.data[pos+2] + (0x100*imgData.data[pos+1]) + (0x10000*imgData.data[pos]);
-            }
-			function initArr(arr,l) {
-				for (var i=0;i<l;i++) arr[i]=0;
-			}
+
+            	function initArr(arr,l) {
+			for (var i=0;i<l;i++) arr[i]=0;
+		}
 
             ///////////////////////////////////////////
 
@@ -163,7 +158,14 @@
                 canvas.fillStyle = 'rgb(0,0,0);';
                 canvas.fillRect(0,0,240,240);
                 canvas.fillStyle = 'rgb(255,255,255);';
-			
+
+			initArr(lightmap,240*240);
+			initArr(brightness,512);
+			initArr(map,1024*1024);
+			initArr(monsterData,320*16);
+                        initArr(sprites,18 * 4 * 16 * 12 * 12);
+                        initArr(k,128);
+
                 imgData = canvas.getImageData(0,0,240,240);
 
 				for (var i=0; i<512; i++) {
@@ -246,13 +248,13 @@
 						}
 					}
 				}
-				
+
 				restart();
-				winLevel();
+				//winLevel();
 				run();
 			}//init
-			
-			
+
+
 			gameStarted = false;
 			//int
 			level = 0;
@@ -264,6 +266,7 @@
 			ammo = 20;
 			clips = 20;
 			function restart() {
+				winLevel();
 				gameStarted = false;
 				level = 0;
 				shootDelay = 0;
@@ -273,7 +276,7 @@
 				ammo = 20;
 				clips = 20;
 			}
-			
+
 			tick = 0;
 			offs = 30;//const?
 			playerDir = 0;
@@ -317,9 +320,9 @@
 						monsterData[0] = (xm+w)>>1;
 						monsterData[1] = (ym+h)>>1;
 						monsterData[15] = 0x808080;
-						monsterData[11] = 1; 
+						monsterData[11] = 1;
 					}
-                        
+
 					//rooms?
 					xWin0 = xm+5;
 					yWin0 = ym+5;
@@ -408,9 +411,9 @@
 			shootDir=0;
 			cos=0;
 			sin=0;
-			
+
 			function run() {
-               
+
 				if (gameStarted)
 				{
 					tick++;
@@ -425,7 +428,7 @@
 					playerDir = Math.atan2(mkint(mouse / 240) - 120, mouse % 240 - 120);
 
 					//dbl
-					var shootDir = playerDir + (rand(100) - rand(100)) / 100.0 * 0.2; 
+					var shootDir = playerDir + (rand(100) - rand(100)) / 100.0 * 0.2;
 					var cos = Math.cos(-shootDir);
 					var sin = Math.sin(-shootDir);
 
@@ -475,7 +478,7 @@
 
 							var ddd = mkint((xd * xd + yd * yd) / 256);
 							var br = brightness[ddd] * brr / 255;
-					
+
 							if (ddd < 16)
 							{
 								var tmp = mkint(128 * (16 - ddd) / 16);
@@ -599,7 +602,7 @@
 						{
 							p = (17 * 4 * 16 + ((m & 1) * 16 + (tick & 15))) * 144;
 						}
-							
+
 						//draw monster
 						for (var y = ym - 6; y < ym + 6; y++)
 							for (var x = xm - 6; x < xm + 6; x++)
@@ -765,15 +768,15 @@
 					if (shoot)
 					{
 						shootCasing=0;
-						sound(10+shotIdx++);
-						if (shotIdx>3) {
+						sound(10+shotIdx);
+						if (++shotIdx>3) {
 							shotIdx=0;
 						}
-						
+
 						if (rand(50)<10) {
 							sound(rand(1)+3);
 						}
-						
+
 						if (ammo >= 220)
 						{
 							shootDelay = 2;
@@ -890,7 +893,7 @@
 						imgData.data[ioff+1] = g;
 						imgData.data[ioff+2] = b;
 					}
-                    
+
 					if (y % 2 == 0 && (y >= damage && y < 220))
 					{
 						for (var x = 232; x < 238; x++)
@@ -916,7 +919,7 @@
 				}
 
 				canvas.putImageData(imgData,0,0);
-                        
+
 				canvas.fillText("" + score, 4, 232);
 				if (!gameStarted)
 				{
@@ -933,38 +936,38 @@
 					canvas.fillText("Level " + level, 90, 70);
 				}
 
-		
-				window.setTimeout('run()',20);
+
+				window.setTimeout('run()',10);
 			}//run
 
 			function key(e,down) {
 				k[e.which]=down?1:0;
 			}
-			
+
 			function mousek(e,down) {
 				k[1]=down?1:0;
 			}
-			
+
 			function mousem(e) {
 				mouse= Math.min(240,e.x-10) + (240*Math.min(240,e.y-10));
-			}		
-			
+			}
+
 			function sound(no) {
 				var el = document.getElementById('s'+no);
 				if (el) {
-					el.currentTime=0;
+//                            el.currentTime=0;
 					el.play();
 				}
 			}
-			
+
         </script>
     </head>
-    <body onload="init();" 
-          onkeydown="key(event,true);" 
-          onkeyup="key(event,false);"
-          onmousedown="mousek(event,true)"
-          onmouseup="mousek(event,false)"
-          onmousemove="mousem(event)">
+    <body onload="init();"
+          onkeydown="key(event,true);return false;"
+          onkeyup="key(event,false);return false;"
+          onmousedown="mousek(event,true);return false;"
+          onmouseup="mousek(event,false);return false;"
+          onmousemove="mousem(event);return false;">
         <canvas id="canvas1" width="240" height="240">
             no canvas support
         </canvas>
@@ -979,6 +982,6 @@
 		<audio id="s11" src="shot.mp3" preload="auto" />
 		<audio id="s12" src="shot.mp3" preload="auto" />
 		<audio id="s13" src="shot.mp3" preload="auto" />
-		
+
     </body>
 </html>
