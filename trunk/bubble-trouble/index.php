@@ -9,15 +9,6 @@
 
             <script type="text/javascript">
 
-                var charstable = '####################'+
-                    '####################'+
-                    '()*+,-./0123456789:;'+
-                    '<=>?@ABCDEFGHIJKLMNO'+
-                    'PQRSTUVWXYZ[/]^_"abc'+
-                    'defghijklmnopqrstuvw'+
-                    'xyz{|}~#############'+
-                    '##################ß#';
-
                 function getNode(name) {
                     return $('#'+name);
                 }
@@ -139,6 +130,8 @@
                     kd:0,  //keydown
                     bubbles:0,
                     l:3,
+                    score:0,
+                    high:0,
                     el:null
                 };
                 var croc = [
@@ -204,9 +197,36 @@
                     el:null
                 };
         
+                var topbar = {
+                    el:[],
+                    str: '                     ',
+                    xdim:16,
+                    ydim:11,
+                    charstable: '####################'+
+                        '§###################'+
+                        '()*+,-./0123456789:;'+
+                        '<=>?@ABCDEFGHIJKLMNO'+
+                        'PQRSTUVWXYZ[/]^_"abc'+
+                        'defghijklmnopqrstuvw'+
+                        'xyz{|}~#############'+
+                        '##################ß#'
+                };
+                
                 var level;
                 var tick;
                 var sounds={};
+
+                function setChars() {
+                    for (var i=0;i<21;i++) {
+                        var pos = topbar.charstable.indexOf(topbar.str.charAt(i));
+                        var y = Math.floor(pos / 20);
+                        var x = pos % 20;
+                        console.log(pos,x,y);
+                        topbar.el[i].css('background-position-x',(320-(x*topbar.xdim))+'px');
+                        topbar.el[i].css('background-position-y',(87-(y*topbar.ydim))+'px');
+                    }
+                }
+
 
                 function dudeKi() {
                     if (dude.ku) {
@@ -367,6 +387,44 @@
                     }
                 }
 
+                
+                function updateScore() {
+                    var i;
+                    topbar.str = '';
+                    
+                    if (dude.high<dude.score) {
+                        dude.high = dude.score;
+                    }
+                    
+                    for (i=0;i<3;i++) {
+                        if (dude.l > i) {
+                            topbar.str+='@';
+                        }else {
+                            topbar.str+=' ';
+                        }
+                    }
+                    topbar.str+=' ';
+                    
+                    var l = 6-String(dude.score).length;
+                    for (i=0;i<l;i++) {
+                        topbar.str+='0';
+                    }
+                    topbar.str+=dude.score;
+                    
+                    topbar.str+=' ';
+                    topbar.str+=dude.bubbles;
+                    
+                    topbar.str+=' HI';
+                    
+                    var l = 5-String(dude.high).length;
+                    for (i=0;i<l;i++) {
+                        topbar.str+='0';
+                    }
+                    topbar.str+=dude.high;
+                    
+                    setChars();
+                } 
+
                 function soapCollision() {
                     if (isDudeCollision(soap.x, soap.y-88, 16, 20)) {
                         resetSoap();
@@ -401,7 +459,9 @@
                 
                 function gotBubble() {
                     dude.bubbles+=1;
+                    dude.score+=10;
                     sounds.good.trigger();
+                    updateScore();
                 }
 
                 // dude=14x10 1=4x2 0=8x5
@@ -430,6 +490,9 @@
                 var killColorStore={};
                 function killAnim(state) {
                     if (tick) { 
+                        dude.l--;
+                        updateScore();
+                        
                         sounds.boom.play();
                         sounds.soap.stop();
                         sounds.atmo.stop();
@@ -443,7 +506,6 @@
                     
                     if (state>=40) {
                         state=0;
-                        dude.l--;
                         for (var i=0;i<7;i++) {
                             getNode('waterbar'+i).css('background-color',killColorStore[i]);
                         }
@@ -496,15 +558,29 @@
                     });
                 }
             
-                function startScreen() {
-                    getNode('title').show();
+                function startScreen(idx) {
+                    dude.l = 3;
+                    dude.score = 0;
+                    dude.bubbles = 0;
+                    
+                    if (idx === undefined) {
+                        idx=0;
+                    } else {
+                        idx++;
+                    }
+                    var scrollTxt = '                     *** A BUBBLE IN TROUBLE *** A 1 DAY GAME BY MNT FOR FLAREGAMES GAMEJAM 2012 *** PRESS CURSOR KEYS TO PLAY ***                     ';
+                    topbar.str=scrollTxt.substr((idx/3) % scrollTxt.length,21);
+                    setChars();
+                    
                     if (dude.kd || dude.kl || dude.kr || dude.ku) {
-                        getNode('title').hide();
+                        updateScore();
                         waterIn(function() { levelInit(); });                    
                         return;
                     }
                 
-                    window.setTimeout('startScreen()',50);
+                    window.setTimeout(function(){
+                        startScreen(idx);   
+                    },50);
                     setNewWaterColors();
                 }
 
@@ -592,9 +668,13 @@
                     if (tick) { 
                         window.clearInterval(tick); 
                         tick=null; 
+                        
+                        level++;
+                        dude.bubbles=0;
+                        dude.score+=250;
+                        updateScore();
                     }
                     if (state>40) {
-                        level++;
                         levelInit();
                         return;
                     }
@@ -711,8 +791,19 @@
                     sounds.drain = getNode('sound_drain')[0];
                     sounds.soap = getNode('sound_soap')[0];
                     sounds.gameover = getNode('sound_gameover')[0];
+                    
+                    for (var i=0;i<22;i++) {
+                        topbar.el[i]=getNode('txt'+i);
+                    }
 
                     decorateSounds();
+
+                    dude.el.css('left',-1000);
+                    for (var i in bubbles) {
+                        bubbles[i].el.css('left',-1000);
+                    }
+                    croc[0].el.css('left',-1000);
+                    croc[1].el.css('left',-1000);
 
                     level=1;
                     setNewWaterColors();
@@ -720,7 +811,7 @@
                     for (var i=0;i<7;i++) {
                         getNode('waterbar'+i).hide();
                     }
-
+                    updateScore();
                     startScreen();                
                 }
 
@@ -728,7 +819,13 @@
     </head>
     <body onload="init();">
 
-        <img src="back.gif" style="position:absolute;z-index:5;top:0;left:0" />
+        <?
+        for ($i = 0; $i < 20; $i++) {
+            echo '<div class="txt" id="txt' . $i . '" style="left:' . (($i * 16) + 8) . 'px;;"></div>';
+        }
+        ?>
+
+        <img src="back.gif" style="position:absolute;z-index:5;top:0;left:0;" />
         <?
         echo '<div id="waterbar" style="position:absolute;left:0px;top:84px;height:156px;width:336px"></div>' . "\n";
         echo '<img id="waves" style="position:absolute;left:32px;top:85px;height:2px;width:272px;z-index:4" src="waveanim.gif"></div>' . "\n";
@@ -757,10 +854,6 @@
             <img src="soap.gif" id="soap" style="top:-32px" />
             <div id="stream"></div>
             <div id="web"></div>
-            <div id="title">
-                A BUBBLE<br />
-                IN TROUBLE
-            </div>
         </div>
 
         <audio id="sound_boom" src="boom.mp3" type="audio/mp3" preload="true" ></audio>
