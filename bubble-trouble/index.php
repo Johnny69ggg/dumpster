@@ -221,7 +221,6 @@
                         var pos = topbar.charstable.indexOf(topbar.str.charAt(i));
                         var y = Math.floor(pos / 20);
                         var x = pos % 20;
-                        console.log(pos,x,y);
                         topbar.el[i].css('background-position-x',(320-(x*topbar.xdim))+'px');
                         topbar.el[i].css('background-position-y',(87-(y*topbar.ydim))+'px');
                     }
@@ -434,17 +433,18 @@
                 
                 function spiderKi() {
                     spider.delay--;
+                    
                     if (spider.delay<0) {
-                        if (spider.h>175) {
+                        if (spider.h>110) {
                             spider.down=false;
                         }
                         if (spider.down) {
-                            spider.y+=3;
+                            spider.h+=3;
                         } else {
-                            spider.y-=3;
-                            if (spider.y<-30) {
+                            spider.h-=3;
+                            if (spider.h<0) {
                                 spider.down=true;
-                                spider.delay=100;
+                                spider.delay=150;
                             }
                         }
                         spider.el.css('height',50+spider.h);
@@ -452,7 +452,7 @@
                 }
                        
                 function spiderCollision() {
-                    if (isDudeCollision(172, spider.h+7, 1, spider.h)) {
+                    if (isDudeCollision(172, spider.h+7, 3, spider.h)) {
                         killAnim();
                     }
                 }
@@ -473,6 +473,7 @@
                             (bubbles[i].y-8<=dude.y)) {
                             bubbles[i].y=105+rand(30);
                             dude.bubbles-=(dude.bubbles>0?1:0);
+                            updateScore();
                             sounds.bad.trigger();
                         }
                     }
@@ -537,6 +538,8 @@
                     soap.el.hide();
                     croc[0].el.hide();
                     croc[1].el.hide();
+                    spider.el.hide();
+                    spider.el2.hide();
                 }
 
                 function showEverything() {
@@ -548,6 +551,8 @@
                     soap.el.show();
                     croc[0].el.show();
                     croc[1].el.show();
+                    spider.el.show();
+                    spider.el2.show();
                 }
                 
                 function gameOver() {
@@ -562,17 +567,23 @@
                     dude.l = 3;
                     dude.score = 0;
                     dude.bubbles = 0;
-                    
+                    level=1;
+                    duck.x = 0;
+                    duck.el.css('margin-left',duck.x);
+
                     if (idx === undefined) {
                         idx=0;
+                        sounds.title.play();
+                        hideEverything();
                     } else {
                         idx++;
                     }
-                    var scrollTxt = '                     *** A BUBBLE IN TROUBLE *** A 1 DAY GAME BY MNT FOR FLAREGAMES GAMEJAM 2012 *** PRESS CURSOR KEYS TO PLAY ***                     ';
-                    topbar.str=scrollTxt.substr((idx/3) % scrollTxt.length,21);
+                    var scrollTxt = '                     *** A BUBBLE IN TROUBLE *** A 1 DAY GAME BY MNT FOR FLAREGAMES GAMEJAM 2012 *** PRESS CURSOR KEYS TO PLAY *** CATCH SMALL BUBBLES AND SOAP, AVOID EVERYTHING ELSE ***                     ';
+                    topbar.str=scrollTxt.substr((idx/2) % scrollTxt.length,21);
                     setChars();
                     
                     if (dude.kd || dude.kl || dude.kr || dude.ku) {
+                        sounds.title.stop();
                         updateScore();
                         waterIn(function() { levelInit(); });                    
                         return;
@@ -706,7 +717,7 @@
 
                     resetSoap();
                     
-                    spider.delay=1000;
+                    spider.delay=150;
                     spider.down=true;
                     spider.h=0;
                     
@@ -736,7 +747,7 @@
                     tick = window.setInterval('levelTick()',20);
                 }
 
-                function levelTick() {
+                function levelTick() { 
                     dudeKi();
                     crocKi();
                     bubblesKi();
@@ -791,6 +802,7 @@
                     sounds.drain = getNode('sound_drain')[0];
                     sounds.soap = getNode('sound_soap')[0];
                     sounds.gameover = getNode('sound_gameover')[0];
+                    sounds.title = getNode('sound_title')[0];
                     
                     for (var i=0;i<22;i++) {
                         topbar.el[i]=getNode('txt'+i);
@@ -805,7 +817,6 @@
                     croc[0].el.css('left',-1000);
                     croc[1].el.css('left',-1000);
 
-                    level=1;
                     setNewWaterColors();
 
                     for (var i=0;i<7;i++) {
@@ -865,6 +876,8 @@
         <audio id="sound_drain" src="drain.mp3" type="audio/mp3" preload="true" ></audio>
         <audio id="sound_soap" src="soap.mp3" type="audio/mp3" preload="true" ></audio>
         <audio id="sound_gameover" src="gameover.mp3" type="audio/mp3" preload="true" ></audio>
+        <audio id="sound_title" src="music.mp3" type="audio/mp3" preload="true" loop="true" ></audio>
+        
 
     </body>
 </html>
