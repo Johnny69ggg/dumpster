@@ -1,0 +1,16 @@
+{
+    "name" : "rssen",
+    "version": "0.0.1",
+    "dependencies" : {
+        "express":"*",
+        "blindparser":"*",
+        "jscrape":"*",
+        "dbcrud":"*",
+        "atom-writer":"*",
+		"mysql":"*",
+		"xml-writer":"*",
+		"underscore":"*",
+		"xml2js":"*",
+		"request":"*"
+    }
+}
