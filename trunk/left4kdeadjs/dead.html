@@ -8,10 +8,13 @@
                 background-color:black;
                 color:white;
             }
-            #canvas1 {
+            #cwrap {
                 margin-left:auto;
                 margin-right:auto;
             }
+			#canvas1 {
+				zoom:3;
+			}
         </style>
 		<script type="text/javascript">
 			// From http://baagoe.com/en/RandomMusings/javascript/
@@ -95,11 +98,12 @@
             keyR=82;
 
             canvas=0;
+			canvaselem=null;
             imgData=0;
             mouse=0;
-            k = [];
+            k = []; //128
 
-            sprites = [];
+            sprites = []; //18 * 4 * 16 * 12 * 12
 
 			//int
             score = 0;
@@ -110,10 +114,10 @@
             yWin0 = 0;
             xWin1 = 0;
             yWin1 = 0;
-            lightmap = [];
-            brightness = [];
-            map = [];
-	    monsterData = [];
+            lightmap = new Uint8Array(240*240); //240*240
+            brightness = new Uint8Array(512); //512
+            map = new Uint32Array(1024*1024); //1024*1024
+			monsterData = []; //320*16
 
 
 			/*
@@ -146,25 +150,25 @@
                 imgData.data[pos] = pix & 0xff;
             }
 
-            	function initArr(arr,l) {
-			for (var i=0;i<l;i++) arr[i]=0;
-		}
+            function initArr(arr,l,bits) {
+				for (var i=0;i<l;i++) arr[i]=0;
+			}
 
             ///////////////////////////////////////////
 
             function init() {
-                var elem = document.getElementById('canvas1');
-                canvas = elem.getContext('2d');
+                canvaselem = document.getElementById('canvas1');
+                canvas = canvaselem.getContext('2d');
                 canvas.fillStyle = 'rgb(0,0,0);';
                 canvas.fillRect(0,0,240,240);
                 canvas.fillStyle = 'rgb(255,255,255);';
 
-			initArr(lightmap,240*240);
-			initArr(brightness,512);
-			initArr(map,1024*1024);
-			initArr(monsterData,320*16);
-                        initArr(sprites,18 * 4 * 16 * 12 * 12);
-                        initArr(k,128);
+				initArr(lightmap,240*240,8);
+				initArr(brightness,512,8);
+				initArr(map,1024*1024,32);
+				initArr(monsterData,320*16,8);
+                initArr(sprites,18 * 4 * 16 * 12 * 12,32);
+                initArr(k,128,8);
 
                 imgData = canvas.getImageData(0,0,240,240);
 
@@ -949,7 +953,7 @@
 			}
 
 			function mousem(e) {
-				mouse= Math.min(240,e.x-10) + (240*Math.min(240,e.y-10));
+				mouse= Math.min(240,(e.x/canvaselem.style.zoom)-10) + (240*Math.min(240,(e.y/canvaselem.style.zoom)-10));
 			}
 
 			function sound(no) {
@@ -968,9 +972,11 @@
           onmousedown="mousek(event,true);return false;"
           onmouseup="mousek(event,false);return false;"
           onmousemove="mousem(event);return false;">
-        <canvas id="canvas1" width="240" height="240">
+        <div id="cwrap">
+		<canvas id="canvas1" width="240" height="240">
             no canvas support
         </canvas>
+		</div>
 		<audio src="background.mp3" autoplay loop />
 		<audio id="s2" src="reload.mp3" preload="auto" />
 		<audio id="s3" src="rico1.mp3" preload="auto" />
